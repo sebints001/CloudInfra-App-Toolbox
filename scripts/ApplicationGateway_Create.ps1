@@ -120,13 +120,13 @@ try
       -Port $fronendPortNumber
 
     #Create the backend pool
-    if($backendAddressType = 'fqdn')
+    if($backendAddressType -eq 'fqdn')
     {
       $backendPool = New-AzApplicationGatewayBackendAddressPool `
       -Name $backendPoolName `
       -BackendFqdns $backendFqdnorAddress 
     }
-    elseif($backendAddressType = 'ipaddress')
+    elseif($backendAddressType -eq 'ipaddress')
     {
       $backendPool = New-AzApplicationGatewayBackendAddressPool `
       -Name $backendPoolName `
