@@ -11,7 +11,7 @@ resources:
     - repository: VMAutomationRepo
       type: 'github'
       name: 'CloudInfra-App-Toolbox'
-      endpoint: ''
+      endpoint: 'Automation_githubconnection'
       ref: $(Build.SourceBranch)
 
 variables:
