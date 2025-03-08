@@ -25,7 +25,7 @@ variables:
     value: CloudAppConnection
 
   - name: agent_name
-    value: Deploy Agent 
+    value: 'windows-latest'
 
 stages:
 
