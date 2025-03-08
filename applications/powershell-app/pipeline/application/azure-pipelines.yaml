@@ -10,7 +10,7 @@ resources:
   repositories:
     - repository: VMAutomationRepo
       type: 'github'
-      name: 'CloudInfra-App-Toolbox'
+      name: 'sebints001/CloudInfra-App-Toolbox'
       endpoint: 'Automation_githubconnection'
       ref: $(Build.SourceBranch)
 
