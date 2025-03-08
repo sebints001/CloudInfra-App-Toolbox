@@ -1,0 +1,165 @@
+parameters:
+  ansibleTowerConn: ""
+  azureSubscription: ""
+
+steps:
+
+# For Resource Group TODO: If to deploy resource group, please make sure it conmment it out. 
+
+- task: CTPE.prod-bb-resource-group-V2-0-1.prod-bb-create-resource-group-V2.0.1.prodbbcreateresourcegroupV201@1
+  displayName: 'prod-bb-resource-group-V2.0.1'
+  inputs:
+    ansibleTowerConn: ${{ parameters.ansibleTowerConn }}
+    credentials: '$(var_Credentials)'
+    var_subscriptionId: '$(var_subscriptionId)'
+    var_location: '$(var_location)'
+    var_deploymentId: '$(var_deploymentId)'
+    var_owner: '$(var_owner)'
+    var_chargeCode: '$(var_chargeCode)'
+    var_productApp: '$(var_productApp)'
+    var_resourceGroupName: '$(var_resourceGroupName)'
+    var_environment: '$(var_environment)'
+  condition: and(succeeded(), eq(variables['Deploy_ResourceGroup'], 'true'))
+
+# For Function App
+
+- task: CTPE.prod-bb-azure-function-app-V5-0-0.prod-bb-create-azure-function-app-V5.0.0.prodbbcreateazurefunctionappV500@1
+  displayName: 'prod-bb-azure-function-app-V5.0.0'
+  inputs:
+    ansibleTowerConn: ${{ parameters.ansibleTowerConn }}
+    Credentials: '$(var_Credentials)'
+    var_subscriptionId: '$(var_subscriptionId)'
+    var_location: '$(var_location)'
+    var_resourceGroupName: '$(var_resourceGroupName)'
+    var_chargeCode: '$(var_chargeCode)'
+    var_owner: '$(var_owner)'
+    var_deploymentId: '$(var_deploymentId)'
+    var_logAnalyticsResourceId: '$(var_LogAnalyticspID)'
+    var_appServicePlanName: '$(var_appServicePlanName)'
+    var_appServicePlanId: '$(var_appServicePlanID)'
+    var_storageAccountId: '$(var_storageAccountId)'
+    var_storageAccountKey: '$(storageaccountkey-functionapp)'
+    var_appInsightsId: '$(var_appInsightsId)'
+    var_isLinuxFunction: '$(var_isLinuxFunction)'
+    var_linuxFxVersion: '$(var_linuxFxVersion)'
+    var_functionVersion: '$(var_functionVersion)'
+    var_environment: '$(var_environment)'
+    var_functionName: '$(var_functionName)'
+  condition: and(succeeded(), eq(variables['Deploy_FunctionApp'], 'true'))
+  
+
+
+# Function App configuration. 
+
+- task: AzureCLI@2
+  displayName: 'Add vNet Integration'
+  inputs:
+    azureSubscription: ${{ parameters.azureSubscription }}
+    scriptType: pscore
+    scriptLocation: inlineScript
+    inlineScript: az functionapp vnet-integration add --name $(var_functionAppName) --resource-group $(var_resourceGroupName) --vnet $(var_virtualNetworkName) --subnet $(var_subnetId)
+  condition: and(succeeded(), eq(variables['Deploy_FunctionApp_Configuration'], 'true'))
+
+- task: AzureCLI@2
+  displayName: 'Adjust FUNCTIONS_WORKER_RUNTIME application setting'
+  inputs:
+    azureSubscription: ${{ parameters.azureSubscription }}
+    scriptType: pscore
+    scriptLocation: inlineScript
+    inlineScript: az functionapp config appsettings set --name $(var_functionName) --resource-group $(var_resourceGroupName) --settings "FUNCTIONS_WORKER_RUNTIME=powershell"
+  condition: and(succeeded(), eq(variables['Deploy_FunctionApp_Configuration'], 'true'))
+
+- task: AzureCLI@2
+  displayName: 'Add a system-assigned identity for $(var_functionAppName)'
+  inputs:
+    azureSubscription: ${{ parameters.azureSubscription }}
+    scriptType: pscore
+    scriptLocation: inlineScript
+    inlineScript: az webapp identity assign -g $(var_resourceGroupName) -n $(var_functionAppName) 
+  condition: and(succeeded(), eq(variables['Deploy_FunctionApp_Configuration'], 'true'))
+
+
+- task: AzureCLI@2
+  displayName: 'Add permission for secrets to $(var_keyVaultName)'
+  inputs:
+    azureSubscription: ${{ parameters.azureSubscription }}
+    scriptType: 'pscore'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      Write-Output "Get Function app System Identity"
+      $functionappIdentity = (az functionapp identity show --name $(var_functionAppName) --resource-group $(var_resourceGroupName) --output tsv --query principalId)
+      Write-Output "Add access policy to keyvault"
+      az keyvault set-policy --name $(var_keyVaultName) --object-id $functionappIdentity --secret-permissions get list
+  condition: and(succeeded(), eq(variables['Deploy_FunctionApp_Configuration'], 'true'))
+
+- task: AzureCLI@2
+  displayName: 'Add secrets from keyvault to function app configuration'
+  inputs:
+    azureSubscription: ${{ parameters.azureSubscription }}
+    scriptType: 'pscore'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      $fabricKeyVault4=(az keyvault secret show --vault-name $(var_keyVaultName) --name $(var_appsettingName_4) --output tsv --query id)
+      $fabricKeyVault5=(az keyvault secret show --vault-name $(var_keyVaultName) --name $(var_appsettingName_5) --output tsv --query id)
+      $fabricKeyVault6=(az keyvault secret show --vault-name $(var_keyVaultName) --name $(var_appsettingName_6) --output tsv --query id)
+      $fabricKeyVault7=(az keyvault secret show --vault-name $(var_keyVaultName) --name $(var_appsettingName_7) --output tsv --query id)
+      $fabricKeyVault8=(az keyvault secret show --vault-name $(var_keyVaultName) --name $(var_appsettingName_8) --output tsv --query id)
+      $fabricKeyVault9=(az keyvault secret show --vault-name $(var_keyVaultName) --name $(var_appsettingName_9) --output tsv --query id)
+      $fabricKeyVault10=(az keyvault secret show --vault-name $(var_keyVaultName) --name $(var_appsettingName_10) --output tsv --query id)
+      $fabricKeyVault11=(az keyvault secret show --vault-name $(var_keyVaultName) --name $(var_appsettingName_11) --output tsv --query id)
+      $fabricKeyVault12=(az keyvault secret show --vault-name $(var_keyVaultName) --name $(var_appsettingName_12) --output tsv --query id)
+      $fabricKeyVault13=(az keyvault secret show --vault-name $(var_keyVaultName) --name $(var_appsettingName_13) --output tsv --query id)
+      $fabricKeyVault14=(az keyvault secret show --vault-name $(var_keyVaultName) --name $(var_appsettingName_14) --output tsv --query id)
+      $fabricKeyVault15=(az keyvault secret show --vault-name $(var_keyVaultName) --name $(var_appsettingName_15) --output tsv --query id)
+      $fabricKeyVault16=(az keyvault secret show --vault-name $(var_keyVaultName) --name $(var_appsettingName_16) --output tsv --query id)
+      $fabricKeyVault17=(az keyvault secret show --vault-name $(var_keyVaultName) --name $(var_appsettingName_17) --output tsv --query id)
+      $var_EYGSTenantId="5b973f99-77df-4beb-b27d-aa0c70b8482c"
+      az functionapp config appsettings set --name $(var_functionAppName) --resource-group $(var_resourceGroupName) --settings `
+      "$(var_appsettingName_1)=$(var_subscriptionId)" `
+      "$(var_appsettingName_2)=$(var_tenantId)" `
+      "$(var_appsettingName_3)=$(var_keyVaultName)" `
+      "$(var_appsettingName_4)=""@Microsoft.KeyVault(SecretUri=$fabricKeyVault4)""" `
+      "$(var_appsettingName_5)=""@Microsoft.KeyVault(SecretUri=$fabricKeyVault5)""" `
+      "$(var_appsettingName_6)=""@Microsoft.KeyVault(SecretUri=$fabricKeyVault6)""" `
+      "$(var_appsettingName_7)=""@Microsoft.KeyVault(SecretUri=$fabricKeyVault7)""" `
+      "$(var_appsettingName_8)=""@Microsoft.KeyVault(SecretUri=$fabricKeyVault8)""" `
+      "$(var_appsettingName_9)=""@Microsoft.KeyVault(SecretUri=$fabricKeyVault9)""" `
+      "$(var_appsettingName_10)=""@Microsoft.KeyVault(SecretUri=$fabricKeyVault10)""" `
+      "$(var_appsettingName_11)=""@Microsoft.KeyVault(SecretUri=$fabricKeyVault11)""" `
+      "$(var_appsettingName_12)=""@Microsoft.KeyVault(SecretUri=$fabricKeyVault12)""" `
+      "$(var_appsettingName_13)=""@Microsoft.KeyVault(SecretUri=$fabricKeyVault13)""" `
+      "$(var_appsettingName_14)=""@Microsoft.KeyVault(SecretUri=$fabricKeyVault14)""" `
+      "$(var_appsettingName_15)=""@Microsoft.KeyVault(SecretUri=$fabricKeyVault15)""" `
+      "$(var_appsettingName_16)=""@Microsoft.KeyVault(SecretUri=$fabricKeyVault16)""" `
+      "$(var_appsettingName_17)=""@Microsoft.KeyVault(SecretUri=$fabricKeyVault17)""" `
+      EYGSTenantId=$var_EYGSTenantId `
+      --output none
+  condition: and(succeeded(), eq(variables['Deploy_FunctionApp_Configuration'], 'true'))
+
+- task: AzureCLI@2
+  displayName: 'Add Identity provider for function app'
+  inputs:
+    azureSubscription: ${{ parameters.azureSubscription }}
+    scriptType: 'pscore'
+    scriptLocation: 'inlineScript'
+    addSpnToEnvironment: true
+    useGlobalConfig: true
+
+    inlineScript: |
+      $tenantId = (az account show --output tsv --query tenantId)
+      
+      az config set extension.use_dynamic_install=yes_without_prompt
+      $identifierUrlApi = "api://$(sub-client-id)"
+      
+      az webapp auth microsoft update -g $(var_resourceGroupName) -n $(var_functionAppName) --issuer https://sts.windows.net/$tenantId/v2.0 --client-id $(sub-client-id) --client-secret $(sub-client-secret) --allowed-audiences $identifierUrlApi --yes  --output none
+      az webapp auth update  -g $(var_resourceGroupName) -n $(var_functionAppName) --enabled true --enable-token-store true --action RedirectToLoginPage --redirect-provider AzureActiveDirectory  --output none
+  condition: and(succeeded(), eq(variables['Deploy_FunctionApp_Configuration'], 'true'))
+
+- task: AzureCLI@2
+  displayName: 'Restart Function App $(var_functionName)'
+  inputs:
+    azureSubscription: ${{ parameters.azureSubscription }}
+    scriptType: pscore
+    scriptLocation: inlineScript
+    inlineScript: az webapp restart -g $(var_resourceGroupName) -n $(var_functionAppName)
+  condition: and(succeeded(), eq(variables['Deploy_FunctionApp_Configuration'], 'true'))

@@ -1,0 +1,44 @@
+trigger:
+  branches:
+    include:
+    - develop
+    - main
+
+pr: none
+
+resources:
+  repositories:
+    - repository: VMAutomationRepo
+      type: 'github'
+      name: 'CloudInfra-App-Toolbox'
+      endpoint: ''
+      ref: $(Build.SourceBranch)
+
+variables:
+  - name: group_vars
+    value: VariableGroup
+
+  - name: template_vars
+    value: ../../variables/pipeline-vars.yaml
+
+  - name: azure_sub
+    value: CloudAppConnection
+
+  - name: agent_name
+    value: Deploy Agent 
+
+stages:
+
+  - stage: Deploy_Application
+    jobs:
+      - job: Deploy_Application
+        displayName: "Application Deployment"
+        pool:          
+          name: ${{ variables.agent_name }}
+        variables:
+          - template: ${{ variables.template_vars }}
+        steps:
+          - template: ./templates/build.yaml
+          - template: ./templates/release.yaml
+            parameters:
+              azureSubscription: ${{ variables.azure_sub }}

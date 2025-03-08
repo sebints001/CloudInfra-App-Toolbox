@@ -1,0 +1,24 @@
+steps:
+  - task: DownloadBuildArtifacts@0
+    inputs:
+      downloadPath: '$(Build.ArtifactStagingDirectory)'
+      artifactName: 'drop'
+  
+  - task: AzureFunctionApp@1
+    displayName: "Perform deployment in $(var_functionAppName) with zip"
+    inputs:
+      azureSubscription: "${{ parameters.azureSubscription }}"
+      appType: 'functionAppLinux'
+      appName: '$(var_functionAppName)'
+      resourceGroup: '$(var_resourceGroupName)'
+      package: '$(Build.ArtifactStagingDirectory)/drop/$(var_functionAppName).zip'
+      runtimeStack: 'powershell|7.2'
+      configurationStrings: '-linuxFxVersion: powershell|7.2'
+  
+  - task: AzureCLI@2
+    displayName: 'Restart Function App $(var_functionName)'
+    inputs:
+      azureSubscription: "${{ parameters.azureSubscription }}"
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: az webapp restart -g $(var_resourceGroupName) -n $(var_functionAppName)

@@ -1,0 +1,91 @@
+parameters:
+
+  - name: Deploy_ResourceGroup
+    type: boolean
+    default: true
+
+  - name: Deploy_FunctionApp
+    type: boolean
+    default: true
+
+  - name: Deploy_FunctionApp_Configuration
+    type: boolean
+    default: true
+
+trigger: none
+pr: none
+
+resources:
+  repositories:
+    - repository: Subscription-Repo
+      type: 'github'
+      name: 'ey-org/fabric-cloudidentities-subscription'
+      endpoint: 'Fabric-CloudIdentities-GithubEmu'
+      ref: $(Build.SourceBranch)
+
+variables:
+
+  - name: 'Deploy_ResourceGroup'
+    value: ${{ parameters.Deploy_ResourceGroup}}
+
+  - name: Deploy_FunctionApp
+    value: ${{ parameters.Deploy_FunctionApp}}
+
+  - name: Deploy_FunctionApp_Configuration
+    value: ${{ parameters.Deploy_FunctionApp_Configuration}}
+
+  - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/develop') }}:
+    - name: group_vars
+      value: Fabric-Cloud-Identities-DevLatest
+
+    - name: template_vars
+      value: ../../variables/pipeline-dev.yaml
+
+    - name: azure_sub
+      value: Fabric-CloudIdentities-ARMDeployment(DEVInfra)
+
+    - name: agent_name
+      value: Deploy Agent EYDEV
+
+  - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/qa') }}:
+    - name: group_vars
+      value: Fabric-Cloud-Identities-QALatest
+
+    - name: template_vars
+      value: ../../variables/pipeline-qa.yaml
+
+    - name: azure_sub
+      value: Fabric-CloudIdentities-ARMDeployment(QAInfra)
+
+    - name: agent_name
+      value: Deploy Agent EYDEV
+
+  - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+    - name: group_vars
+      value: Fabric-Cloud-Identities-ProdLatest
+
+    - name: template_vars
+      value: ../../variables/pipeline-prod.yaml
+
+    - name: azure_sub
+      value: Fabric-CloudIdentities-ARMDeployment(PRODInfra)
+
+    - name: agent_name
+      value: Deploy Agent EYGS
+
+stages:
+
+  - stage: Deploy_Infrastructure
+    jobs:
+      - job: Deploy_Infrastructure
+        displayName: "Infrastructure Deployment"
+        pool:          
+          name: ${{ variables.agent_name }}
+        variables:
+          - template: ${{ variables.template_vars }}
+          - group: ${{ variables.group_vars }}
+        steps:
+          - template: ./templates/release.yaml
+            parameters:
+              ansibleTowerConn: "Fabric-CloudIdentities-FabricAnsibleCreds"
+              azureSubscription: ${{ variables.azure_sub }}

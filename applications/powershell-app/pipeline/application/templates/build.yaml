@@ -1,0 +1,15 @@
+steps:
+  - task: ArchiveFiles@2
+    displayName: "Compress Function App deployment artifacts as zip"
+    inputs:
+      rootFolderOrFile: '$(System.DefaultWorkingDirectory)/Fabric/api/' 
+      includeRootFolder: false
+      archiveType: 'zip'
+      archiveFile: '$(Build.ArtifactStagingDirectory)/$(var_functionAppName).zip' 
+
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Artifacts
+    inputs:
+        pathtoPublish: '$(Build.ArtifactStagingDirectory)' 
+        artifactName: 'drop' 
+        publishLocation: 'Container'

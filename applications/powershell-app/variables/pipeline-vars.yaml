@@ -1,0 +1,4 @@
+variables:
+  # For Misc
+  var_serviceConnection: "CloudAppConnection"
+ 
