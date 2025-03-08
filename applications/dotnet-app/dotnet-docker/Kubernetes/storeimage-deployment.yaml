@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: storeimage-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: storeimage
+  template:
+    metadata:
+      labels:
+        app: storeimage
+    spec:
+      containers:
+      - name: storeimage
+        image: microservicetest02registry.azurecr.io/storeimage:latest
+        ports:
+        - containerPort: 80
