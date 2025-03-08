@@ -2,25 +2,25 @@ parameters:
 
   - name: Deploy_ResourceGroup
     type: boolean
-    default: true
+    default: "true"
 
   - name: Deploy_FunctionApp
     type: boolean
-    default: true
+    default: "true"
 
   - name: Deploy_FunctionApp_Configuration
     type: boolean
-    default: true
+    default: "true"
 
 trigger: none
 pr: none
 
 resources:
   repositories:
-    - repository: Subscription-Repo
+    - repository: VMAutomationRepo
       type: 'github'
-      name: 'ey-org/fabric-cloudidentities-subscription'
-      endpoint: 'Fabric-CloudIdentities-GithubEmu'
+      name: 'CloudInfra-App-Toolbox'
+      endpoint: 'Automation_githubconnection'
       ref: $(Build.SourceBranch)
 
 variables:
@@ -34,44 +34,17 @@ variables:
   - name: Deploy_FunctionApp_Configuration
     value: ${{ parameters.Deploy_FunctionApp_Configuration}}
 
-  - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/develop') }}:
-    - name: group_vars
-      value: Fabric-Cloud-Identities-DevLatest
+  - name: group_vars
+    value: VariableGroup
 
-    - name: template_vars
-      value: ../../variables/pipeline-dev.yaml
+  - name: template_vars
+    value: ../../variables/pipeline-vars.yaml
 
-    - name: azure_sub
-      value: Fabric-CloudIdentities-ARMDeployment(DEVInfra)
+  - name: azure_sub
+    value: CloudAppConnection
 
-    - name: agent_name
-      value: Deploy Agent EYDEV
-
-  - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/qa') }}:
-    - name: group_vars
-      value: Fabric-Cloud-Identities-QALatest
-
-    - name: template_vars
-      value: ../../variables/pipeline-qa.yaml
-
-    - name: azure_sub
-      value: Fabric-CloudIdentities-ARMDeployment(QAInfra)
-
-    - name: agent_name
-      value: Deploy Agent EYDEV
-
-  - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
-    - name: group_vars
-      value: Fabric-Cloud-Identities-ProdLatest
-
-    - name: template_vars
-      value: ../../variables/pipeline-prod.yaml
-
-    - name: azure_sub
-      value: Fabric-CloudIdentities-ARMDeployment(PRODInfra)
-
-    - name: agent_name
-      value: Deploy Agent EYGS
+  - name: agent_name
+    value: Deploy Agent 
 
 stages:
 
@@ -87,5 +60,4 @@ stages:
         steps:
           - template: ./templates/release.yaml
             parameters:
-              ansibleTowerConn: "Fabric-CloudIdentities-FabricAnsibleCreds"
               azureSubscription: ${{ variables.azure_sub }}
