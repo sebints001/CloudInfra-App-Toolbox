@@ -12,8 +12,8 @@ steps:
       appName: '$(var_functionAppName)'
       resourceGroup: '$(var_resourceGroupName)'
       package: '$(Build.ArtifactStagingDirectory)/drop/$(var_functionAppName).zip'
-      runtimeStack: 'powershell|7.2'
-      configurationStrings: '-linuxFxVersion: powershell|7.2'
+      runtimeStack: 'powershell|7.4'
+      configurationStrings: '-linuxFxVersion: powershell|7.4'
   
   - task: AzureCLI@2
     displayName: 'Restart Function App $(var_functionName)'

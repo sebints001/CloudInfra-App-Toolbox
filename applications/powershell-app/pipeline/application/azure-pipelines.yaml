@@ -25,7 +25,7 @@ variables:
     value: CloudAppConnection
 
   - name: agent_name
-    value: Azure Pipelines
+    value: Default
 
 stages:
 
