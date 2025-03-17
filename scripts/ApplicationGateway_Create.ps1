@@ -2,6 +2,7 @@ Param
 (
 [Parameter(Mandatory=$true)][String]$subscriptionID,
 [Parameter(Mandatory=$true)][String]$rgName,
+[Parameter(Mandatory=$true)][String]$tenantId,
 [Parameter(Mandatory=$true)][String]$appGatewayName,
 [Parameter(Mandatory=$true)][String]$vNetName,
 [Parameter(Mandatory=$true)][String]$vnetRG,
@@ -72,11 +73,9 @@ $enableHttp2 = $false
 $keyvaultIdentityName = "$($appGatewayName)".Replace("APG", "MID").Replace("WAF", "MID")
 $cipherSuites = @("TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384", "TLS_DHE_RSA_WITH_AES_128_GCM_SHA256", "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256", "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384", "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384", "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256")
 
-$tenantId = '5b973f99-77df-4beb-b27d-aa0c70b8482c'
 $securePassword = $secret | ConvertTo-SecureString -AsPlainText -Force
 $credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $applicationId, $securePassword
 
-Login-AzAccount
 Connect-AzAccount -ServicePrincipal -Credential $credential -TenantId $tenantId
 
 #Select-AzSubscription -SubscriptionId $subscriptionID

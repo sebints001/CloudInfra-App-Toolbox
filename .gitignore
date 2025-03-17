@@ -396,3 +396,13 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+*mykey/*
+*/.terraform/*
+.vscode/*
+*/.terraform.lock.hcl
+infrastructure/terraform/.terraform.lock.hcl
+infrastructure/terraform/.terraform/
+infrastructure/terraform/mykey*
+infrastructure/terraform/environments/dev/.terraform/*
+infrastructure/terraform/environments/dev/.terraform.lock.hcl

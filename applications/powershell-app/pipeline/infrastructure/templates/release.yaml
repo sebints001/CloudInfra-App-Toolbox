@@ -6,7 +6,7 @@ steps:
 # For Resource Group TODO: If to deploy resource group, please make sure it conmment it out. 
 
 - task: CreateResourceGroup@2
-  displayName: 'prod-bb-resource-group-V2.0.1'
+  displayName: 'resource-group-V1.0.1'
   inputs:
     var_subscriptionId: '$(var_subscriptionId)'
     var_location: '$(var_location)'
